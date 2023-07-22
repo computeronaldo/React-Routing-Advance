@@ -1,34 +1,39 @@
-import React from "react";
+import { useLoaderData, json } from "react-router-dom";
 import EventsList from "../components/EventsList";
 
-const DUMMY_EVENTS = [
-  {
-    id: "d1",
-    image: "",
-    title: "Go to park.",
-    date: "17:00 PM",
-  },
-  {
-    id: "f2",
-    image: "",
-    title: "Attend hacktoberfest",
-    date: "18:30 PM",
-  },
-  {
-    id: "s2",
-    image: "",
-    title: "Watch LaLiga match in Madrid",
-    date: "13:00 PM",
-  },
-];
+function EventsPage() {
+  const data = useLoaderData();
 
-const EventsPage = () => {
-  return (
-    <>
-      <h1>Events Page</h1>
-      <EventsList events={DUMMY_EVENTS} />
-    </>
-  );
-};
+  // if(data.isError) {
+  //   return <p>{data.message}</p>
+  // }
+
+  const events = data.events;
+  return <EventsList events={events} />;
+}
 
 export default EventsPage;
+
+// loader function not being functional react components can't
+// use react hooks like useState, useEffect etc. apart from that
+// as we can run them on browser all browser APIs can be used.
+export async function loader() {
+  // fetch always returns a promise and returns a response object
+  const response = await fetch("http://localhost:8080/events");
+
+  if (!response.ok) {
+    // ... handle errors
+    //return {isError: true, message: "Could not fetch data."};
+    // throw new Response(JSON.stringify({message: 'Could not fetch events.'}), {
+    //   status: 500
+    // });
+    throw json({ message: "Could not fetch events." }, { status: 500 });
+  } else {
+    // the response object returned can directly be accessed by useLoaderData
+    // to get the data and we can avoid [await response.json()]. This is some
+    // functionality the router and modern browser provides.
+    // const resData = await response.json();
+    // return resData.events;
+    return response;
+  }
+}
